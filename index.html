@@ -39,7 +39,7 @@ input{font:inherit}
 .top{position:absolute;top:12px;left:12px;right:12px;display:flex;flex-direction:column;gap:8px;pointer-events:none;z-index:4}
 .top>*{pointer-events:auto}
 .bar{display:flex;gap:8px}
-.cityBtn{flex:none;height:48px;padding:0 12px;border-radius:var(--rMd);background:var(--raised);color:var(--text);border:var(--cardBorder);box-shadow:var(--shadow);display:flex;align-items:center;gap:4px;font-size:15px;font-weight:700}
+.cityBtn{flex:none;max-width:42%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;height:48px;padding:0 12px;border-radius:var(--rMd);background:var(--raised);color:var(--text);border:var(--cardBorder);box-shadow:var(--shadow);display:flex;align-items:center;gap:4px;font-size:15px;font-weight:700}
 .search{flex:1;min-width:0;height:48px;padding:0 6px 0 14px;border-radius:var(--rMd);background:var(--raised);border:var(--cardBorder);box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;color:var(--sub)}
 .search input{flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:15px;color:var(--text)}
 .search input::placeholder{color:var(--sub)}
@@ -124,6 +124,14 @@ nav button[aria-current="page"]{color:var(--text);font-weight:700}
 .ov .field{display:flex;align-items:center;gap:8px;height:46px;padding:0 6px 0 12px;border-radius:var(--rMd);background:var(--subtle);color:var(--sub)}
 .ov .field input{flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:15px;color:var(--text)}
 .cityRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border:0;border-top:1px solid var(--border);background:transparent;color:inherit;text-align:left;width:100%}
+.rg{border-top:1px solid var(--border)}
+.rg>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;cursor:pointer;list-style:none}
+.rg>summary::-webkit-details-marker{display:none}
+.rg .t15{font-size:15px;font-weight:800}
+.hubRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--border)}
+.hubBtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.hubBtns button{min-height:36px;min-width:48px;padding:0 10px;border-radius:999px;border:var(--cardBorder);background:var(--raised);color:var(--text);font-size:13px;font-weight:700}
+.hubBtns button[aria-current]{background:var(--accent);color:var(--onAccent);border-color:var(--accent)}
 .cityRow .cur{font-size:12px;font-weight:700;color:var(--accentText)}
 .setup{position:absolute;inset:0;z-index:30;background:var(--surface);display:flex;flex-direction:column;justify-content:center;gap:12px;padding:32px}
 .setup h2{margin:0;font-size:22px}
@@ -258,33 +266,133 @@ nav button[aria-current="page"]{color:var(--text);font-weight:700}
 
   /* ================= Data ================= */
   /* Hubs = OnRoster-owned anchor points. Coordinates, zones and picks are ILLUSTRATIVE ONLY. */
+  /* Hubs = airports from the crew route list (OurAirports, public domain) + one proposed city hub per city.
+     City hub coordinates are Claude's approximate proposals (check: true). Zones and picks are ILLUSTRATIVE ONLY. */
   const CITIES = {
-    tokyo: { type: 'hotel', short: '시나가와', name: 'Tokyo · 시나가와 호텔 주변', sub: '지금 레이오버 · 10/10', center: { lat: 35.6284, lng: 139.7387 }, tz: 'Asia/Tokyo', ref: '호텔 주변', layover: true,
-      picks: [
-        { id: 'or-t1', src: 'onroster', name: '역 앞 24시간 규동집 (예시)', cat: 'food', dx: 260, dy: -280, note: '늦게 도착해도 열려 있어요. 혼자 먹기 편한 카운터석.', tags: ['24시간', '혼밥'] },
+    "icn": {"type": "base", "region": "Base", "cityKey": "incheon", "cityName": "인천", "iata": "ICN", "short": "ICN", "name": "인천국제공항 · 베이스", "sub": "베이스", "ref": "베이스", "center": {"lat": 37.4691, "lng": 126.451}, "tz": "Asia/Seoul", "check": false, "anchor": null, "picks": [
+      { id: 'or-i1', src: 'onroster', name: '크루 동선 근처 약국 (예시)', cat: 'pharmacy', dx: 150, dy: -120, note: '출근 전 상비약.', tags: ['이른 시간'] },
+        { id: 'cr-i1', src: 'crew', crewN: 12, name: '직원 식당 근처 카페 (예시)', cat: 'cafe', dx: -260, dy: 110, note: '쇼업 전 커피.', tags: ['이른 시간'] }
+    ]},
+    "pus": {"type": "airport", "region": "Domestic", "cityKey": "busan", "cityName": "부산", "iata": "PUS", "short": "PUS", "name": "부산 · 김해국제공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 35.1795, "lng": 128.938}, "tz": "Asia/Seoul", "check": false, "anchor": null, "hl": true, "picks": []},
+    "busan": {"type": "city", "region": "Domestic", "cityKey": "busan", "cityName": "부산", "iata": "PUS", "short": "부산", "name": "부산 · 서면역 주변", "sub": "시내 거점 · PUS", "ref": "서면역 주변", "center": {"lat": 35.1578, "lng": 129.06}, "tz": "Asia/Seoul", "check": true, "anchor": "서면역", "picks": []},
+    "cju": {"type": "airport", "region": "Domestic", "cityKey": "jeju", "cityName": "제주", "iata": "CJU", "short": "CJU", "name": "제주 · 제주국제공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 33.51206, "lng": 126.49255}, "tz": "Asia/Seoul", "check": false, "anchor": null, "hl": true, "picks": []},
+    "jeju": {"type": "city", "region": "Domestic", "cityKey": "jeju", "cityName": "제주", "iata": "CJU", "short": "제주", "name": "제주 · 신제주 연동 주변", "sub": "시내 거점 · CJU", "ref": "신제주 연동 주변", "center": {"lat": 33.489, "lng": 126.487}, "tz": "Asia/Seoul", "check": true, "anchor": "신제주 연동", "picks": []},
+    "aoj": {"type": "airport", "region": "Japan", "cityKey": "aomori", "cityName": "아오모리", "iata": "AOJ", "short": "AOJ", "name": "아오모리 · 아오모리 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 40.73378, "lng": 140.68948}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "hl": true, "picks": []},
+    "aomori": {"type": "city", "region": "Japan", "cityKey": "aomori", "cityName": "아오모리", "iata": "AOJ", "short": "아오모리", "name": "아오모리 · 아오모리역 주변", "sub": "시내 거점 · AOJ", "ref": "아오모리역 주변", "center": {"lat": 40.8286, "lng": 140.7343}, "tz": "Asia/Tokyo", "check": true, "anchor": "아오모리역", "picks": []},
+    "cts": {"type": "airport", "region": "Japan", "cityKey": "sapporo", "cityName": "삿포로", "iata": "CTS", "short": "CTS", "name": "삿포로 · 신치토세 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 42.77475, "lng": 141.69041}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "sapporo": {"type": "city", "region": "Japan", "cityKey": "sapporo", "cityName": "삿포로", "iata": "CTS", "short": "삿포로", "name": "삿포로 · 삿포로역 주변", "sub": "시내 거점 · CTS", "ref": "삿포로역 주변", "center": {"lat": 43.0687, "lng": 141.3508}, "tz": "Asia/Tokyo", "check": true, "anchor": "삿포로역", "picks": []},
+    "fuk": {"type": "airport", "region": "Japan", "cityKey": "fukuoka", "cityName": "후쿠오카", "iata": "FUK", "short": "FUK", "name": "후쿠오카 · 후쿠오카 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 33.5859, "lng": 130.451}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "hl": true, "picks": []},
+    "fukuoka": {"type": "city", "region": "Japan", "cityKey": "fukuoka", "cityName": "후쿠오카", "iata": "FUK", "short": "후쿠오카", "name": "후쿠오카 · 하카타역 주변", "sub": "시내 거점 · FUK", "ref": "하카타역 주변", "center": {"lat": 33.5902, "lng": 130.4207}, "tz": "Asia/Tokyo", "check": true, "anchor": "하카타역", "picks": []},
+    "hnd": {"type": "airport", "region": "Japan", "cityKey": "tokyo", "cityName": "도쿄", "iata": "HND", "short": "HND", "name": "도쿄 · 하네다 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 35.54968, "lng": 139.78696}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "tokyo": {"type": "city", "region": "Japan", "cityKey": "tokyo", "cityName": "도쿄", "iata": "HND", "short": "도쿄", "name": "도쿄 · 시나가와역 주변", "sub": "시내 거점 · HND", "ref": "시나가와역 주변", "center": {"lat": 35.6285, "lng": 139.7387}, "tz": "Asia/Tokyo", "check": true, "anchor": "시나가와역", "layover": true, "sub": "지금 레이오버 · 10/10", "picks": [
+      { id: 'or-t1', src: 'onroster', name: '역 앞 24시간 규동집 (예시)', cat: 'food', dx: 260, dy: -280, note: '늦게 도착해도 열려 있어요. 혼자 먹기 편한 카운터석.', tags: ['24시간', '혼밥'] },
         { id: 'or-t2', src: 'onroster', name: '조용한 2층 카페 (예시)', cat: 'cafe', dx: -340, dy: 160, note: '오전에 한산해요. 콘센트 자리가 많아요.', tags: ['조용함', '콘센트'] },
         { id: 'or-t3', src: 'onroster', name: '역 안 드러그스토어 (예시)', cat: 'pharmacy', dx: 430, dy: -120, note: '감기약·파스. 영어 안내가 있어요.', tags: ['영어 가능'] },
         { id: 'cr-t1', src: 'crew', crewN: 8, name: '호텔 옆 편의점 (예시)', cat: 'conv', dx: 90, dy: 70, note: 'ATM 있어요. 새벽에도 열어요.', tags: ['ATM', '24시간'] },
         { id: 'cr-t2', src: 'crew', crewN: 5, name: '골목 라멘집 (예시)', cat: 'food', dx: -720, dy: -760, note: '평일 저녁엔 줄이 짧아요.', tags: ['평일 저녁'] },
         { id: 'cr-t3', src: 'crew', crewN: 3, name: '강변 산책로 (예시)', cat: 'park', dx: 700, dy: 420, note: '아침 러닝 코스. 한 바퀴 25분.', tags: ['러닝'] }
-      ] },
-    nrt: { type: 'airport', short: 'NRT', name: 'Tokyo Narita · 공항', sub: '공항 거점', center: { lat: 35.7720, lng: 140.3929 }, tz: 'Asia/Tokyo', ref: '공항',
-      picks: [
-        { id: 'or-n1', src: 'onroster', name: '출국장 아래층 식당가 (예시)', cat: 'food', dx: 120, dy: 90, note: '브리핑 전 빠른 식사.', tags: ['빠름'] },
+    ]},
+    "koj": {"type": "airport", "region": "Japan", "cityKey": "kagoshima", "cityName": "가고시마", "iata": "KOJ", "short": "KOJ", "name": "가고시마 · 가고시마 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 31.8034, "lng": 130.71899}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "kagoshima": {"type": "city", "region": "Japan", "cityKey": "kagoshima", "cityName": "가고시마", "iata": "KOJ", "short": "가고시마", "name": "가고시마 · 가고시마추오역 주변", "sub": "시내 거점 · KOJ", "ref": "가고시마추오역 주변", "center": {"lat": 31.5838, "lng": 130.5413}, "tz": "Asia/Tokyo", "check": true, "anchor": "가고시마추오역", "picks": []},
+    "kmj": {"type": "airport", "region": "Japan", "cityKey": "kumamoto", "cityName": "구마모토", "iata": "KMJ", "short": "KMJ", "name": "구마모토 · 구마모토 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 32.8373, "lng": 130.855}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "kumamoto": {"type": "city", "region": "Japan", "cityKey": "kumamoto", "cityName": "구마모토", "iata": "KMJ", "short": "구마모토", "name": "구마모토 · 구마모토 시내(도리초스지) 주변", "sub": "시내 거점 · KMJ", "ref": "구마모토 시내(도리초스지) 주변", "center": {"lat": 32.8032, "lng": 130.7102}, "tz": "Asia/Tokyo", "check": true, "anchor": "구마모토 시내(도리초스지)", "picks": []},
+    "kmq": {"type": "airport", "region": "Japan", "cityKey": "kanazawa", "cityName": "가나자와", "iata": "KMQ", "short": "KMQ", "name": "가나자와 · 고마쓰 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 36.39341, "lng": 136.40689}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "kanazawa": {"type": "city", "region": "Japan", "cityKey": "kanazawa", "cityName": "가나자와", "iata": "KMQ", "short": "가나자와", "name": "가나자와 · 가나자와역 주변", "sub": "시내 거점 · KMQ", "ref": "가나자와역 주변", "center": {"lat": 36.5781, "lng": 136.648}, "tz": "Asia/Tokyo", "check": true, "anchor": "가나자와역", "picks": []},
+    "kij": {"type": "airport", "region": "Japan", "cityKey": "niigata", "cityName": "니가타", "iata": "KIJ", "short": "KIJ", "name": "니가타 · 니가타 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 37.95417, "lng": 139.11219}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "niigata": {"type": "city", "region": "Japan", "cityKey": "niigata", "cityName": "니가타", "iata": "KIJ", "short": "니가타", "name": "니가타 · 니가타역 주변", "sub": "시내 거점 · KIJ", "ref": "니가타역 주변", "center": {"lat": 37.9122, "lng": 139.0612}, "tz": "Asia/Tokyo", "check": true, "anchor": "니가타역", "picks": []},
+    "kix": {"type": "airport", "region": "Japan", "cityKey": "osaka", "cityName": "오사카", "iata": "KIX", "short": "KIX", "name": "오사카 · 간사이 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 34.4273, "lng": 135.244}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "osaka": {"type": "city", "region": "Japan", "cityKey": "osaka", "cityName": "오사카", "iata": "KIX", "short": "오사카", "name": "오사카 · 난바역 주변", "sub": "시내 거점 · KIX", "ref": "난바역 주변", "center": {"lat": 34.665, "lng": 135.5017}, "tz": "Asia/Tokyo", "check": true, "anchor": "난바역", "picks": []},
+    "ngs": {"type": "airport", "region": "Japan", "cityKey": "nagasaki", "cityName": "나가사키", "iata": "NGS", "short": "NGS", "name": "나가사키 · 나가사키 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 32.9169, "lng": 129.914}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "nagasaki": {"type": "city", "region": "Japan", "cityKey": "nagasaki", "cityName": "나가사키", "iata": "NGS", "short": "나가사키", "name": "나가사키 · 나가사키역 주변", "sub": "시내 거점 · NGS", "ref": "나가사키역 주변", "center": {"lat": 32.7523, "lng": 129.8697}, "tz": "Asia/Tokyo", "check": true, "anchor": "나가사키역", "picks": []},
+    "nrt": {"type": "airport", "region": "Japan", "cityKey": "narita", "cityName": "나리타", "iata": "NRT", "short": "NRT", "name": "나리타 · 나리타 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 35.76858, "lng": 140.38871}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": [
+      { id: 'or-n1', src: 'onroster', name: '출국장 아래층 식당가 (예시)', cat: 'food', dx: 120, dy: 90, note: '브리핑 전 빠른 식사.', tags: ['빠름'] },
         { id: 'cr-n1', src: 'crew', crewN: 6, name: '터미널 카페 (예시)', cat: 'cafe', dx: -180, dy: -60, note: '대기 시간에 앉아 있기 좋아요.', tags: ['좌석 많음'] }
-      ] },
-    icn: { type: 'base', short: 'ICN', name: '인천공항 · 베이스', sub: '베이스', center: { lat: 37.4602, lng: 126.4407 }, tz: 'Asia/Seoul', ref: '베이스',
-      picks: [
-        { id: 'or-i1', src: 'onroster', name: '크루 동선 근처 약국 (예시)', cat: 'pharmacy', dx: 150, dy: -120, note: '출근 전 상비약.', tags: ['이른 시간'] },
-        { id: 'cr-i1', src: 'crew', crewN: 12, name: '직원 식당 근처 카페 (예시)', cat: 'cafe', dx: -260, dy: 110, note: '쇼업 전 커피.', tags: ['이른 시간'] }
-      ] },
-    manila: { type: 'hotel', short: '마카티', name: 'Manila · 마카티 호텔 주변', sub: '10/20 레이오버 예정', center: { lat: 14.5547, lng: 121.0244 }, tz: 'Asia/Manila', ref: '호텔 주변',
-      picks: [
-        { id: 'or-m1', src: 'onroster', name: '쇼핑몰 안 약국 (예시)', cat: 'pharmacy', dx: 300, dy: 200, note: '에어컨 있는 길로 갈 수 있어요.', tags: ['실내 이동'] },
+    ]},
+    "narita": {"type": "city", "region": "Japan", "cityKey": "narita", "cityName": "나리타", "iata": "NRT", "short": "나리타", "name": "나리타 · 나리타역(오모테산도) 주변", "sub": "시내 거점 · NRT", "ref": "나리타역(오모테산도) 주변", "center": {"lat": 35.7765, "lng": 140.3184}, "tz": "Asia/Tokyo", "check": true, "anchor": "나리타역(오모테산도)", "picks": []},
+    "ngo": {"type": "airport", "region": "Japan", "cityKey": "nagoya", "cityName": "나고야", "iata": "NGO", "short": "NGO", "name": "나고야 · 주부 센트레아 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 34.8584, "lng": 136.80499}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "nagoya": {"type": "city", "region": "Japan", "cityKey": "nagoya", "cityName": "나고야", "iata": "NGO", "short": "나고야", "name": "나고야 · 나고야역 주변", "sub": "시내 거점 · NGO", "ref": "나고야역 주변", "center": {"lat": 35.1709, "lng": 136.8815}, "tz": "Asia/Tokyo", "check": true, "anchor": "나고야역", "picks": []},
+    "oka": {"type": "airport", "region": "Japan", "cityKey": "naha", "cityName": "나하(오키나와)", "iata": "OKA", "short": "OKA", "name": "나하(오키나와) · 나하 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 26.19244, "lng": 127.6398}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "naha": {"type": "city", "region": "Japan", "cityKey": "naha", "cityName": "나하(오키나와)", "iata": "OKA", "short": "나하(오키나와)", "name": "나하(오키나와) · 국제거리(겐초마에) 주변", "sub": "시내 거점 · OKA", "ref": "국제거리(겐초마에) 주변", "center": {"lat": 26.2147, "lng": 127.679}, "tz": "Asia/Tokyo", "check": true, "anchor": "국제거리(겐초마에)", "picks": []},
+    "okj": {"type": "airport", "region": "Japan", "cityKey": "okayama", "cityName": "오카야마", "iata": "OKJ", "short": "OKJ", "name": "오카야마 · 오카야마 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 34.7569, "lng": 133.855}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "okayama": {"type": "city", "region": "Japan", "cityKey": "okayama", "cityName": "오카야마", "iata": "OKJ", "short": "오카야마", "name": "오카야마 · 오카야마역 주변", "sub": "시내 거점 · OKJ", "ref": "오카야마역 주변", "center": {"lat": 34.6664, "lng": 133.918}, "tz": "Asia/Tokyo", "check": true, "anchor": "오카야마역", "picks": []},
+    "oit": {"type": "airport", "region": "Japan", "cityKey": "oita", "cityName": "오이타", "iata": "OIT", "short": "OIT", "name": "오이타 · 오이타 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 33.4794, "lng": 131.737}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "oita": {"type": "city", "region": "Japan", "cityKey": "oita", "cityName": "오이타", "iata": "OIT", "short": "오이타", "name": "오이타 · 오이타역 주변", "sub": "시내 거점 · OIT", "ref": "오이타역 주변", "center": {"lat": 33.2333, "lng": 131.6066}, "tz": "Asia/Tokyo", "check": true, "anchor": "오이타역", "picks": []},
+    "ukb": {"type": "airport", "region": "Japan", "cityKey": "kobe", "cityName": "고베", "iata": "UKB", "short": "UKB", "name": "고베 · 고베 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 34.6328, "lng": 135.224}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "picks": []},
+    "kobe": {"type": "city", "region": "Japan", "cityKey": "kobe", "cityName": "고베", "iata": "UKB", "short": "고베", "name": "고베 · 산노미야 주변", "sub": "시내 거점 · UKB", "ref": "산노미야 주변", "center": {"lat": 34.6946, "lng": 135.1955}, "tz": "Asia/Tokyo", "check": true, "anchor": "산노미야", "picks": []},
+    "toy": {"type": "airport", "region": "Japan", "cityKey": "toyama", "cityName": "도야마", "iata": "TOY", "short": "TOY", "name": "도야마 · 도야마 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 36.64842, "lng": 137.18736}, "tz": "Asia/Tokyo", "check": false, "anchor": null, "hl": true, "picks": []},
+    "toyama": {"type": "city", "region": "Japan", "cityKey": "toyama", "cityName": "도야마", "iata": "TOY", "short": "도야마", "name": "도야마 · 도야마역 주변", "sub": "시내 거점 · TOY", "ref": "도야마역 주변", "center": {"lat": 36.7013, "lng": 137.2133}, "tz": "Asia/Tokyo", "check": true, "anchor": "도야마역", "picks": []},
+    "can": {"type": "airport", "region": "China", "cityKey": "guangzhou", "cityName": "광저우", "iata": "CAN", "short": "CAN", "name": "광저우 · 광저우 바이윈 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 23.3924, "lng": 113.299}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "guangzhou": {"type": "city", "region": "China", "cityKey": "guangzhou", "cityName": "광저우", "iata": "CAN", "short": "광저우", "name": "광저우 · 주장신청(톈허) 주변", "sub": "시내 거점 · CAN", "ref": "주장신청(톈허) 주변", "center": {"lat": 23.119, "lng": 113.321}, "tz": "Asia/Shanghai", "check": true, "anchor": "주장신청(톈허)", "picks": []},
+    "csx": {"type": "airport", "region": "China", "cityKey": "changsha", "cityName": "창사", "iata": "CSX", "short": "CSX", "name": "창사 · 창사 황화 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 28.1892, "lng": 113.22}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "changsha": {"type": "city", "region": "China", "cityKey": "changsha", "cityName": "창사", "iata": "CSX", "short": "창사", "name": "창사 · 우이광장 주변", "sub": "시내 거점 · CSX", "ref": "우이광장 주변", "center": {"lat": 28.196, "lng": 112.977}, "tz": "Asia/Shanghai", "check": true, "anchor": "우이광장", "picks": []},
+    "dlc": {"type": "airport", "region": "China", "cityKey": "dalian", "cityName": "다롄", "iata": "DLC", "short": "DLC", "name": "다롄 · 다롄 저우수이쯔 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 38.96572, "lng": 121.53848}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "hl": true, "picks": []},
+    "dalian": {"type": "city", "region": "China", "cityKey": "dalian", "cityName": "다롄", "iata": "DLC", "short": "다롄", "name": "다롄 · 중산광장 주변", "sub": "시내 거점 · DLC", "ref": "중산광장 주변", "center": {"lat": 38.9213, "lng": 121.644}, "tz": "Asia/Shanghai", "check": true, "anchor": "중산광장", "picks": []},
+    "dyg": {"type": "airport", "region": "China", "cityKey": "zhangjiajie", "cityName": "장자제", "iata": "DYG", "short": "DYG", "name": "장자제 · 장자제 허화 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 29.10475, "lng": 110.44279}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "hl": true, "picks": []},
+    "zhangjiajie": {"type": "city", "region": "China", "cityKey": "zhangjiajie", "cityName": "장자제", "iata": "DYG", "short": "장자제", "name": "장자제 · 장자제 시내(톈먼산 케이블카역) 주변", "sub": "시내 거점 · DYG", "ref": "장자제 시내(톈먼산 케이블카역) 주변", "center": {"lat": 29.122, "lng": 110.478}, "tz": "Asia/Shanghai", "check": true, "anchor": "장자제 시내(톈먼산 케이블카역)", "picks": []},
+    "foc": {"type": "airport", "region": "China", "cityKey": "fuzhou", "cityName": "푸저우", "iata": "FOC", "short": "FOC", "name": "푸저우 · 푸저우 창러 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 25.92925, "lng": 119.67252}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "fuzhou": {"type": "city", "region": "China", "cityKey": "fuzhou", "cityName": "푸저우", "iata": "FOC", "short": "푸저우", "name": "푸저우 · 둥제커우 주변", "sub": "시내 거점 · FOC", "ref": "둥제커우 주변", "center": {"lat": 26.085, "lng": 119.297}, "tz": "Asia/Shanghai", "check": true, "anchor": "둥제커우", "picks": []},
+    "hfe": {"type": "airport", "region": "China", "cityKey": "hefei", "cityName": "허페이", "iata": "HFE", "short": "HFE", "name": "허페이 · 허페이 신차오 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 31.98779, "lng": 116.9769}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "hefei": {"type": "city", "region": "China", "cityKey": "hefei", "cityName": "허페이", "iata": "HFE", "short": "허페이", "name": "허페이 · 화이허루(쓰파이러우) 주변", "sub": "시내 거점 · HFE", "ref": "화이허루(쓰파이러우) 주변", "center": {"lat": 31.865, "lng": 117.283}, "tz": "Asia/Shanghai", "check": true, "anchor": "화이허루(쓰파이러우)", "picks": []},
+    "hgh": {"type": "airport", "region": "China", "cityKey": "hangzhou", "cityName": "항저우", "iata": "HGH", "short": "HGH", "name": "항저우 · 항저우 샤오산 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 30.23609, "lng": 120.42887}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "hangzhou": {"type": "city", "region": "China", "cityKey": "hangzhou", "cityName": "항저우", "iata": "HGH", "short": "항저우", "name": "항저우 · 시후 후빈 주변", "sub": "시내 거점 · HGH", "ref": "시후 후빈 주변", "center": {"lat": 30.258, "lng": 120.165}, "tz": "Asia/Shanghai", "check": true, "anchor": "시후 후빈", "picks": []},
+    "hkg": {"type": "airport", "region": "China", "cityKey": "hongkong", "cityName": "홍콩", "iata": "HKG", "short": "HKG", "name": "홍콩 · 홍콩 국제공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 22.31184, "lng": 113.91486}, "tz": "Asia/Hong_Kong", "check": false, "anchor": null, "hl": true, "picks": []},
+    "hongkong": {"type": "city", "region": "China", "cityKey": "hongkong", "cityName": "홍콩", "iata": "HKG", "short": "홍콩", "name": "홍콩 · 침사추이 주변", "sub": "시내 거점 · HKG", "ref": "침사추이 주변", "center": {"lat": 22.298, "lng": 114.172}, "tz": "Asia/Hong_Kong", "check": true, "anchor": "침사추이", "picks": []},
+    "kmg": {"type": "airport", "region": "China", "cityKey": "kunming", "cityName": "쿤밍", "iata": "KMG", "short": "KMG", "name": "쿤밍 · 쿤밍 창수이 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 25.11031, "lng": 102.93674}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "hl": true, "picks": []},
+    "kunming": {"type": "city", "region": "China", "cityKey": "kunming", "cityName": "쿤밍", "iata": "KMG", "short": "쿤밍", "name": "쿤밍 · 둥펑광장 주변", "sub": "시내 거점 · KMG", "ref": "둥펑광장 주변", "center": {"lat": 25.039, "lng": 102.719}, "tz": "Asia/Shanghai", "check": true, "anchor": "둥펑광장", "picks": []},
+    "mfm": {"type": "airport", "region": "China", "cityKey": "macau", "cityName": "마카오", "iata": "MFM", "short": "MFM", "name": "마카오 · 마카오 국제공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 22.1496, "lng": 113.592}, "tz": "Asia/Macau", "check": false, "anchor": null, "hl": true, "picks": []},
+    "macau": {"type": "city", "region": "China", "cityKey": "macau", "cityName": "마카오", "iata": "MFM", "short": "마카오", "name": "마카오 · 세나도 광장 주변", "sub": "시내 거점 · MFM", "ref": "세나도 광장 주변", "center": {"lat": 22.1937, "lng": 113.5394}, "tz": "Asia/Macau", "check": true, "anchor": "세나도 광장", "picks": []},
+    "pvg": {"type": "airport", "region": "China", "cityKey": "shanghai", "cityName": "상하이", "iata": "PVG", "short": "PVG", "name": "상하이 · 상하이 푸둥 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 31.1434, "lng": 121.805}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "shanghai": {"type": "city", "region": "China", "cityKey": "shanghai", "cityName": "상하이", "iata": "PVG", "short": "상하이", "name": "상하이 · 인민광장 주변", "sub": "시내 거점 · PVG/SHA", "ref": "인민광장 주변", "center": {"lat": 31.2317, "lng": 121.4747}, "tz": "Asia/Shanghai", "check": true, "anchor": "인민광장", "picks": []},
+    "pek": {"type": "airport", "region": "China", "cityKey": "beijing", "cityName": "베이징", "iata": "PEK", "short": "PEK", "name": "베이징 · 베이징 서우두 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 40.07735, "lng": 116.5967}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "beijing": {"type": "city", "region": "China", "cityKey": "beijing", "cityName": "베이징", "iata": "PEK", "short": "베이징", "name": "베이징 · 왕푸징 주변", "sub": "시내 거점 · PEK", "ref": "왕푸징 주변", "center": {"lat": 39.914, "lng": 116.411}, "tz": "Asia/Shanghai", "check": true, "anchor": "왕푸징", "picks": []},
+    "she": {"type": "airport", "region": "China", "cityKey": "shenyang", "cityName": "선양", "iata": "SHE", "short": "SHE", "name": "선양 · 선양 타오셴 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 41.6398, "lng": 123.48367}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "shenyang": {"type": "city", "region": "China", "cityKey": "shenyang", "cityName": "선양", "iata": "SHE", "short": "선양", "name": "선양 · 중제(중가) 주변", "sub": "시내 거점 · SHE", "ref": "중제(중가) 주변", "center": {"lat": 41.801, "lng": 123.458}, "tz": "Asia/Shanghai", "check": true, "anchor": "중제(중가)", "picks": []},
+    "szx": {"type": "airport", "region": "China", "cityKey": "shenzhen", "cityName": "선전", "iata": "SZX", "short": "SZX", "name": "선전 · 선전 바오안 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 22.63947, "lng": 113.80326}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "shenzhen": {"type": "city", "region": "China", "cityKey": "shenzhen", "cityName": "선전", "iata": "SZX", "short": "선전", "name": "선전 · 푸톈 CBD 주변", "sub": "시내 거점 · SZX", "ref": "푸톈 CBD 주변", "center": {"lat": 22.537, "lng": 114.055}, "tz": "Asia/Shanghai", "check": true, "anchor": "푸톈 CBD", "picks": []},
+    "sha": {"type": "airport", "region": "China", "cityKey": "shanghai", "cityName": "상하이", "iata": "SHA", "short": "SHA", "name": "상하이 · 상하이 훙차오 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 31.1981, "lng": 121.33426}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "tao": {"type": "airport", "region": "China", "cityKey": "qingdao", "cityName": "칭다오", "iata": "TAO", "short": "TAO", "name": "칭다오 · 칭다오 자오둥 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 36.36195, "lng": 120.08817}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "qingdao": {"type": "city", "region": "China", "cityKey": "qingdao", "cityName": "칭다오", "iata": "TAO", "short": "칭다오", "name": "칭다오 · 5·4광장 주변", "sub": "시내 거점 · TAO", "ref": "5·4광장 주변", "center": {"lat": 36.0627, "lng": 120.384}, "tz": "Asia/Shanghai", "check": true, "anchor": "5·4광장", "picks": []},
+    "nkg": {"type": "airport", "region": "China", "cityKey": "nanjing", "cityName": "난징", "iata": "NKG", "short": "NKG", "name": "난징 · 난징 루커우 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 31.73503, "lng": 118.86595}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "nanjing": {"type": "city", "region": "China", "cityKey": "nanjing", "cityName": "난징", "iata": "NKG", "short": "난징", "name": "난징 · 신제커우 주변", "sub": "시내 거점 · NKG", "ref": "신제커우 주변", "center": {"lat": 32.043, "lng": 118.784}, "tz": "Asia/Shanghai", "check": true, "anchor": "신제커우", "picks": []},
+    "tsn": {"type": "airport", "region": "China", "cityKey": "tianjin", "cityName": "톈진", "iata": "TSN", "short": "TSN", "name": "톈진 · 톈진 빈하이 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 39.1244, "lng": 117.346}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "tianjin": {"type": "city", "region": "China", "cityKey": "tianjin", "cityName": "톈진", "iata": "TSN", "short": "톈진", "name": "톈진 · 빈장다오 주변", "sub": "시내 거점 · TSN", "ref": "빈장다오 주변", "center": {"lat": 39.125, "lng": 117.201}, "tz": "Asia/Shanghai", "check": true, "anchor": "빈장다오", "picks": []},
+    "wuh": {"type": "airport", "region": "China", "cityKey": "wuhan", "cityName": "우한", "iata": "WUH", "short": "WUH", "name": "우한 · 우한 톈허 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 30.7748, "lng": 114.21372}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "wuhan": {"type": "city", "region": "China", "cityKey": "wuhan", "cityName": "우한", "iata": "WUH", "short": "우한", "name": "우한 · 장한루 주변", "sub": "시내 거점 · WUH", "ref": "장한루 주변", "center": {"lat": 30.58, "lng": 114.29}, "tz": "Asia/Shanghai", "check": true, "anchor": "장한루", "picks": []},
+    "xmn": {"type": "airport", "region": "China", "cityKey": "xiamen", "cityName": "샤먼", "iata": "XMN", "short": "XMN", "name": "샤먼 · 샤먼 가오치 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 24.54389, "lng": 118.12745}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "xiamen": {"type": "city", "region": "China", "cityKey": "xiamen", "cityName": "샤먼", "iata": "XMN", "short": "샤먼", "name": "샤먼 · 중산루 주변", "sub": "시내 거점 · XMN", "ref": "중산루 주변", "center": {"lat": 24.456, "lng": 118.08}, "tz": "Asia/Shanghai", "check": true, "anchor": "중산루", "picks": []},
+    "xiy": {"type": "airport", "region": "China", "cityKey": "xian", "cityName": "시안", "iata": "XIY", "short": "XIY", "name": "시안 · 시안 셴양 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 34.44221, "lng": 108.76238}, "tz": "Asia/Shanghai", "check": false, "anchor": null, "picks": []},
+    "xian": {"type": "city", "region": "China", "cityKey": "xian", "cityName": "시안", "iata": "XIY", "short": "시안", "name": "시안 · 종루 주변", "sub": "시내 거점 · XIY", "ref": "종루 주변", "center": {"lat": 34.26, "lng": 108.942}, "tz": "Asia/Shanghai", "check": true, "anchor": "종루", "picks": []},
+    "bkk": {"type": "airport", "region": "South East Asia", "cityKey": "bangkok", "cityName": "방콕", "iata": "BKK", "short": "BKK", "name": "방콕 · 수완나품 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 13.6811, "lng": 100.747}, "tz": "Asia/Bangkok", "check": false, "anchor": null, "picks": []},
+    "bangkok": {"type": "city", "region": "South East Asia", "cityKey": "bangkok", "cityName": "방콕", "iata": "BKK", "short": "방콕", "name": "방콕 · 스쿰빗 아속 주변", "sub": "시내 거점 · BKK", "ref": "스쿰빗 아속 주변", "center": {"lat": 13.737, "lng": 100.56}, "tz": "Asia/Bangkok", "check": true, "anchor": "스쿰빗 아속", "picks": []},
+    "cnx": {"type": "airport", "region": "South East Asia", "cityKey": "chiangmai", "cityName": "치앙마이", "iata": "CNX", "short": "CNX", "name": "치앙마이 · 치앙마이 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 18.7668, "lng": 98.9626}, "tz": "Asia/Bangkok", "check": false, "anchor": null, "picks": []},
+    "chiangmai": {"type": "city", "region": "South East Asia", "cityKey": "chiangmai", "cityName": "치앙마이", "iata": "CNX", "short": "치앙마이", "name": "치앙마이 · 타패 게이트(올드시티) 주변", "sub": "시내 거점 · CNX", "ref": "타패 게이트(올드시티) 주변", "center": {"lat": 18.7877, "lng": 98.9934}, "tz": "Asia/Bangkok", "check": true, "anchor": "타패 게이트(올드시티)", "picks": []},
+    "cxr": {"type": "airport", "region": "South East Asia", "cityKey": "nhatrang", "cityName": "나트랑", "iata": "CXR", "short": "CXR", "name": "나트랑 · 깜라인 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 11.9982, "lng": 109.219}, "tz": "Asia/Ho_Chi_Minh", "check": false, "anchor": null, "picks": []},
+    "nhatrang": {"type": "city", "region": "South East Asia", "cityKey": "nhatrang", "cityName": "나트랑", "iata": "CXR", "short": "나트랑", "name": "나트랑 · 쩐푸 해변 주변", "sub": "시내 거점 · CXR", "ref": "쩐푸 해변 주변", "center": {"lat": 12.242, "lng": 109.196}, "tz": "Asia/Ho_Chi_Minh", "check": true, "anchor": "쩐푸 해변", "picks": []},
+    "dad": {"type": "airport", "region": "South East Asia", "cityKey": "danang", "cityName": "다낭", "iata": "DAD", "short": "DAD", "name": "다낭 · 다낭 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 16.0439, "lng": 108.199}, "tz": "Asia/Ho_Chi_Minh", "check": false, "anchor": null, "picks": []},
+    "danang": {"type": "city", "region": "South East Asia", "cityKey": "danang", "cityName": "다낭", "iata": "DAD", "short": "다낭", "name": "다낭 · 한강변(한시장) 주변", "sub": "시내 거점 · DAD", "ref": "한강변(한시장) 주변", "center": {"lat": 16.068, "lng": 108.224}, "tz": "Asia/Ho_Chi_Minh", "check": true, "anchor": "한강변(한시장)", "picks": []},
+    "han": {"type": "airport", "region": "South East Asia", "cityKey": "hanoi", "cityName": "하노이", "iata": "HAN", "short": "HAN", "name": "하노이 · 노이바이 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 21.2212, "lng": 105.807}, "tz": "Asia/Ho_Chi_Minh", "check": false, "anchor": null, "picks": []},
+    "hanoi": {"type": "city", "region": "South East Asia", "cityKey": "hanoi", "cityName": "하노이", "iata": "HAN", "short": "하노이", "name": "하노이 · 호안끼엠 호수 주변", "sub": "시내 거점 · HAN", "ref": "호안끼엠 호수 주변", "center": {"lat": 21.0285, "lng": 105.8522}, "tz": "Asia/Ho_Chi_Minh", "check": true, "anchor": "호안끼엠 호수", "picks": []},
+    "kti": {"type": "airport", "region": "South East Asia", "cityKey": "phnompenh", "cityName": "프놈펜", "iata": "KTI", "short": "KTI", "name": "프놈펜 · 테초 국제공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 11.35999, "lng": 104.92127}, "tz": "Asia/Phnom_Penh", "check": false, "anchor": null, "picks": []},
+    "phnompenh": {"type": "city", "region": "South East Asia", "cityKey": "phnompenh", "cityName": "프놈펜", "iata": "KTI", "short": "프놈펜", "name": "프놈펜 · 리버사이드 주변", "sub": "시내 거점 · KTI/PNH", "ref": "리버사이드 주변", "center": {"lat": 11.568, "lng": 104.93}, "tz": "Asia/Phnom_Penh", "check": true, "anchor": "리버사이드", "picks": []},
+    "mnl": {"type": "airport", "region": "South East Asia", "cityKey": "manila", "cityName": "마닐라", "iata": "MNL", "short": "MNL", "name": "마닐라 · 니노이 아키노 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 14.5086, "lng": 121.02}, "tz": "Asia/Manila", "check": false, "anchor": null, "picks": []},
+    "manila": {"type": "city", "region": "South East Asia", "cityKey": "manila", "cityName": "마닐라", "iata": "MNL", "short": "마닐라", "name": "마닐라 · 마카티 아얄라 주변", "sub": "시내 거점 · MNL", "ref": "마카티 아얄라 주변", "center": {"lat": 14.5547, "lng": 121.0244}, "tz": "Asia/Manila", "check": true, "anchor": "마카티 아얄라", "picks": [
+      { id: 'or-m1', src: 'onroster', name: '쇼핑몰 안 약국 (예시)', cat: 'pharmacy', dx: 300, dy: 200, note: '에어컨 있는 길로 갈 수 있어요.', tags: ['실내 이동'] },
         { id: 'cr-m1', src: 'crew', crewN: 4, name: '공원 옆 카페 (예시)', cat: 'cafe', dx: -500, dy: -400, note: '해 지기 전 산책 겸.', tags: ['산책'] }
-      ] }
+    ]},
+    "pqc": {"type": "airport", "region": "South East Asia", "cityKey": "phuquoc", "cityName": "푸꾸옥", "iata": "PQC", "short": "PQC", "name": "푸꾸옥 · 푸꾸옥 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 10.16978, "lng": 103.99353}, "tz": "Asia/Ho_Chi_Minh", "check": false, "anchor": null, "picks": []},
+    "phuquoc": {"type": "city", "region": "South East Asia", "cityKey": "phuquoc", "cityName": "푸꾸옥", "iata": "PQC", "short": "푸꾸옥", "name": "푸꾸옥 · 즈엉동 주변", "sub": "시내 거점 · PQC", "ref": "즈엉동 주변", "center": {"lat": 10.217, "lng": 103.96}, "tz": "Asia/Ho_Chi_Minh", "check": true, "anchor": "즈엉동", "picks": []},
+    "pnh": {"type": "airport", "region": "South East Asia", "cityKey": "phnompenh", "cityName": "프놈펜", "iata": "PNH", "short": "PNH", "name": "프놈펜 · 프놈펜 국제공항(구)", "sub": "공항 거점", "ref": "공항", "center": {"lat": 11.54716, "lng": 104.8447}, "tz": "Asia/Phnom_Penh", "check": false, "anchor": null, "picks": []},
+    "rmq": {"type": "airport", "region": "South East Asia", "cityKey": "taichung", "cityName": "타이중", "iata": "RMQ", "short": "RMQ", "name": "타이중 · 타이중 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 24.2647, "lng": 120.621}, "tz": "Asia/Taipei", "check": false, "anchor": null, "picks": []},
+    "taichung": {"type": "city", "region": "South East Asia", "cityKey": "taichung", "cityName": "타이중", "iata": "RMQ", "short": "타이중", "name": "타이중 · 타이중역 주변", "sub": "시내 거점 · RMQ", "ref": "타이중역 주변", "center": {"lat": 24.137, "lng": 120.686}, "tz": "Asia/Taipei", "check": true, "anchor": "타이중역", "picks": []},
+    "sgn": {"type": "airport", "region": "South East Asia", "cityKey": "hochiminh", "cityName": "호찌민", "iata": "SGN", "short": "SGN", "name": "호찌민 · 떤선녓 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 10.8188, "lng": 106.652}, "tz": "Asia/Ho_Chi_Minh", "check": false, "anchor": null, "picks": []},
+    "hochiminh": {"type": "city", "region": "South East Asia", "cityKey": "hochiminh", "cityName": "호찌민", "iata": "SGN", "short": "호찌민", "name": "호찌민 · 벤탄(1군) 주변", "sub": "시내 거점 · SGN", "ref": "벤탄(1군) 주변", "center": {"lat": 10.7725, "lng": 106.698}, "tz": "Asia/Ho_Chi_Minh", "check": true, "anchor": "벤탄(1군)", "picks": []},
+    "tpe": {"type": "airport", "region": "South East Asia", "cityKey": "taipei", "cityName": "타이베이", "iata": "TPE", "short": "TPE", "name": "타이베이 · 타오위안 공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 25.0777, "lng": 121.233}, "tz": "Asia/Taipei", "check": false, "anchor": null, "picks": []},
+    "taipei": {"type": "city", "region": "South East Asia", "cityKey": "taipei", "cityName": "타이베이", "iata": "TPE", "short": "타이베이", "name": "타이베이 · 타이베이역 주변", "sub": "시내 거점 · TPE", "ref": "타이베이역 주변", "center": {"lat": 25.0478, "lng": 121.517}, "tz": "Asia/Taipei", "check": true, "anchor": "타이베이역", "picks": []},
+    "gum": {"type": "airport", "region": "Oceanic / Pacific", "cityKey": "guam", "cityName": "괌", "iata": "GUM", "short": "GUM", "name": "괌 · 괌 국제공항", "sub": "공항 거점", "ref": "공항", "center": {"lat": 13.485, "lng": 144.79728}, "tz": "Pacific/Guam", "check": false, "anchor": null, "picks": []},
+    "guam": {"type": "city", "region": "Oceanic / Pacific", "cityKey": "guam", "cityName": "괌", "iata": "GUM", "short": "괌", "name": "괌 · 투몬 베이 주변", "sub": "시내 거점 · GUM", "ref": "투몬 베이 주변", "center": {"lat": 13.514, "lng": 144.805}, "tz": "Pacific/Guam", "check": true, "anchor": "투몬 베이", "picks": []}
   };
-  const HUB_TYPES = [['base', '베이스'], ['airport', '공항'], ['hotel', '호텔 주변']];
+  const REGIONS = ['Base', 'Domestic', 'Japan', 'China', 'South East Asia', 'Oceanic / Pacific'];
+  const REGION_KO = { 'Base': '베이스', 'Domestic': '국내', 'Japan': '일본', 'China': '중국', 'South East Asia': '동남아', 'Oceanic / Pacific': '대양주' };
   const ZONE_M = { 10: 800, 20: 1600 };      // walk 10 min ≈ 800 m, 20 min ≈ 1.6 km (straight-line proxy)
   function offsetLL(c, dx, dy) { return { lat: c.lat - dy / 111320, lng: c.lng + dx / (111320 * Math.cos(c.lat * Math.PI / 180)) }; }
   function seeded(str) { let x = 2166136261; for (const ch of str) x = Math.imul(x ^ ch.charCodeAt(0), 16777619) >>> 0; return () => ((x = Math.imul(x ^ (x >>> 15), 2246822507) >>> 0) / 4294967296); }
@@ -591,7 +699,7 @@ nav button[aria-current="page"]{color:var(--text);font-weight:700}
   /* ================= Map overlays ================= */
   function placeRef() {
     if (refMarker) refMarker.setMap(null);
-    const ic = { hotel: 'hotel', airport: 'plane', base: 'home' }[city().type] || 'pin';
+    const ic = { hotel: 'hotel', city: 'hotel', airport: 'plane', base: 'home' }[city().type] || 'pin';
     const el = h('div', { class: 'ref' }, h('span', { class: 'sq', icon: svg(ic, 16) }), h('span', { class: 'lb' }, (city().short ? city().short + ' · ' : '') + (city().ref || '기준점')));
     refMarker = new HtmlMarker(city().center, el, 'overlayLayer'); refMarker.setMap(map);
   }
@@ -805,6 +913,10 @@ nav button[aria-current="page"]{color:var(--text);font-weight:700}
         right = h('button', { class: 'pill', type: 'button', onclick: () => { S.sheet = 'expanded'; renderAll(); }, icon: svg('list', 16) }, '추천 보기');
         extra = h('div', { class: 'legend' }, h('span', null, h('i'), '도보 10분'), h('span', null, h('i', { class: 'd' }), '도보 20분'), h('span', null, '· 예시 모양'));
       }
+      else if (!S.query && city().zones) {
+        title = city().short + ' · ' + city().ref; sub = '추천 준비 중이에요. 도보 10분·20분 영역을 표시했어요. 카테고리나 검색으로 찾아보세요.';
+        extra = h('div', { class: 'legend' }, h('span', null, h('i'), '도보 10분'), h('span', null, h('i', { class: 'd' }), '도보 20분'), h('span', null, '· 예시 모양'));
+      }
       else if (!S.query) { title = city().short + ' · 무엇을 찾을까요?'; sub = 'OnRoster 거점이 아닌 도시예요. 카테고리나 검색으로 찾아보세요. 결과는 Google 지도 정보예요.'; }
       else if (!items.length) {
         title = '“' + queryLabel() + '” 결과 0곳'; sub = '이 지도 영역에는 결과가 없어요.';
@@ -979,19 +1091,29 @@ nav button[aria-current="page"]{color:var(--text);font-weight:700}
       } }, h('span', { style: 'display:flex;flex-direction:column;gap:1px' }, h('span', { style: 'font-size:15px;font-weight:700' }, p.displayName), h('span', { class: 's13' }, p.formattedAddress || '')))));
       pnl.append(list);
     }
-    HUB_TYPES.forEach(([tp, lbl]) => {
-      const hubs = Object.entries(CITIES).filter(([, c]) => c.type === tp); if (!hubs.length) return;
-      pnl.append(h('span', { class: 'k12' }, lbl));
-      const list = h('div');
-      hubs.forEach(([id, c]) => {
-        const cur = !S.customCity && S.cityId === id;
-        list.append(h('button', { class: 'cityRow', type: 'button', onclick: () => setCity(id) },
-          h('span', { style: 'display:flex;flex-direction:column;gap:1px' }, h('span', { style: 'font-size:15px;font-weight:700' }, c.name), h('span', { class: 's13' }, c.sub + ' · 추천 ' + c.picks.length + '곳 (예시)')),
-          cur ? h('span', { class: 'cur' }, '현재') : null));
+    const cur = S.customCity ? null : CITIES[S.cityId];
+    REGIONS.forEach(rg => {
+      const inRg = Object.entries(CITIES).filter(([, c]) => c.region === rg); if (!inRg.length) return;
+      const groups = [];
+      inRg.forEach(([id, c]) => { let g = groups.find(x => x.key === c.cityKey); if (!g) groups.push(g = { key: c.cityKey, name: c.cityName, hubs: [] }); g.hubs.push([id, c]); });
+      const det = h('details', { class: 'rg' });
+      if (cur && cur.region === rg) det.open = true;
+      det.append(h('summary', null, h('span', { class: 't15' }, REGION_KO[rg] || rg), h('span', { class: 's13' }, groups.length + '개 도시 · ' + inRg.filter(([, c]) => c.type !== 'city').length + '개 공항')));
+      groups.forEach(g => {
+        const codes = g.hubs.filter(([, c]) => c.type !== 'city').map(([, c]) => c.iata).join(' · ');
+        const btns = h('div', { class: 'hubBtns' });
+        g.hubs.forEach(([id, c]) => btns.append(h('button', { type: 'button', 'aria-current': (!S.customCity && S.cityId === id) ? 'true' : null,
+          'aria-label': c.name + (c.type === 'city' ? ' (시내 거점)' : ' (공항 거점)'), onclick: () => setCity(id) },
+          c.type === 'city' ? '시내' : c.iata)));
+        det.append(h('div', { class: 'hubRow' },
+          h('span', { style: 'display:flex;flex-direction:column;gap:1px;min-width:0' },
+            h('span', { style: 'font-size:15px;font-weight:700' }, g.name),
+            h('span', { class: 's13' }, codes + (g.hubs.some(([, c]) => c.type === 'city') ? ' · 시내 ' + g.hubs.find(([, c]) => c.type === 'city')[1].anchor : ''))),
+          btns));
       });
-      pnl.append(list);
+      pnl.append(det);
     });
-    pnl.append(h('span', { class: 's12' }, '거점은 로스터에서 자동으로 채워져요. 거점이 아닌 도시도 위에서 검색할 수 있어요(추천 없이 Google 검색만).'));
+    pnl.append(h('span', { class: 's12' }, '공항 좌표는 공개 공항 데이터, 시내 거점은 제안 위치(근사)예요. 실제 앱에서는 로스터로 지금 거점을 고르고, 거점이 아닌 도시는 위에서 검색해요(추천 없이 Google 검색만).'));
   }
 
   /* ================= Sheet drag ================= */
