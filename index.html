@@ -163,9 +163,10 @@ nav button[aria-current="page"]{color:var(--text);font-weight:700}
 .gate .conf{background:#FFF8DB;color:#8A5300}
 
 @media (max-width:760px){
-  body{flex-direction:column;align-items:center;padding:0;gap:16px;background:#E9ECEF}
+  html,body{height:auto}
+  body{flex-direction:column;align-items:center;justify-content:flex-start;padding:0;gap:16px;background:#E9ECEF}
   .phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none}
-  .harness{width:100%;max-width:480px;padding:0 16px 32px}
+  .harness{width:100%;max-width:480px;padding:0 16px 32px;order:2}
 }
 </style>
 </head>
@@ -537,9 +538,13 @@ nav button[aria-current="page"]{color:var(--text);font-weight:700}
     el.innerHTML = '';
     el.append(
       h('h2', null, 'Google 지도 키가 필요해요'),
-      h('p', null, '왼쪽(모바일은 아래) 설정의 키 입력칸에 Google 데모키를 넣고 “저장하고 불러오기”를 눌러 주세요.')
+      h('p', null, 'Google 지도 키(AIza…)를 넣어 주세요. 키는 이 브라우저에만 저장돼요.')
     );
     if (err) el.append(h('p', { class: 'err' }, err));
+    const kin = h('input', { type: 'password', autocomplete: 'off', placeholder: 'AIza…', 'aria-label': 'Google 지도 키', style: 'height:48px;border:1px solid var(--strong);border-radius:var(--rMd);padding:0 12px;font-size:16px;background:var(--surface);color:var(--text)' });
+    const go = () => { const v = kin.value.trim(); if (!v) { kin.focus(); return; } store.set('key', v); S.key = v; if (document.querySelector('script[src*="maps.googleapis.com"]')) location.reload(); else loadGoogle(); };
+    kin.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    el.append(kin, h('button', { type: 'button', class: 'b pri', onclick: go }, '저장하고 불러오기'));
     el.hidden = false;
   }
   window.gm_authFailure = function () {
